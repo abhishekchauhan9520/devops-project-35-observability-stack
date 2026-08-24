@@ -5,6 +5,20 @@ receivers:
         endpoint: 0.0.0.0:4317
       http:
         endpoint: 0.0.0.0:4318
+  filelog/app:
+    include:
+      - /var/log/app/*.log
+    start_at: beginning
+    operators:
+      - type: json_parser
+        parse_from: body
+        timestamp:
+          parse_from: body.timestamp
+          layout: '%Y-%m-%dT%H:%M:%S.%fZ'
+        severity:
+          parse_from: body.level
+    attributes:
+      service.name: demo-api
 
 processors:
   memory_limiter:
@@ -32,6 +46,6 @@ service:
       processors: [memory_limiter, batch]
       exporters: [otlphttp/tempo]
     logs:
-      receivers: [otlp]
+      receivers: [filelog/app, otlp]
       processors: [memory_limiter, batch]
       exporters: [otlphttp/loki]

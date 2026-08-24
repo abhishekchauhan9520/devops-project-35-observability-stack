@@ -1,0 +1,35 @@
+name: Validate Observability Stack
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate YAML
+        run: |
+          python -m pip install --disable-pip-version-check pyyaml
+          python - <<'PY'
+          from pathlib import Path
+          import yaml
+          for p in Path('.').rglob('*.yml'):
+              if '.git' in p.parts:
+                  continue
+              with p.open() as f:
+                  list(yaml.safe_load_all(f))
+          print('YAML validation passed')
+          PY
+      - name: Validate JSON dashboard
+        run: python -m json.tool grafana/dashboards/observability.json >/dev/null
+      - name: Validate application syntax
+        run: node --check app/server.js && node --check app/telemetry.js
+      - name: Validate Compose model
+        run: docker compose config -q

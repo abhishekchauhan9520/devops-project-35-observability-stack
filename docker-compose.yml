@@ -7,6 +7,8 @@ services:
       OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
     ports:
       - "8080:8080"
+    volumes:
+      - app-logs:/var/log/app
     depends_on:
       otel-collector:
         condition: service_started
@@ -17,9 +19,11 @@ services:
     command: ["--config=/etc/otelcol-contrib/config.yaml"]
     volumes:
       - ./otel/collector.yaml:/etc/otelcol-contrib/config.yaml:ro
+      - app-logs:/var/log/app:ro
     ports:
       - "4318:4318"
       - "4317:4317"
+      - "8889:8889"
     depends_on:
       prometheus:
         condition: service_started
@@ -58,7 +62,7 @@ services:
     command: ["-config.file=/etc/tempo/config.yaml"]
     ports:
       - "3200:3200"
-      - "4319:4317"
+      - "4318:4318"
     volumes:
       - ./tempo/config.yaml:/etc/tempo/config.yaml:ro
       - tempo-data:/var/tempo
@@ -87,6 +91,7 @@ services:
     restart: unless-stopped
 
 volumes:
+  app-logs:
   prometheus-data:
   loki-data:
   tempo-data:

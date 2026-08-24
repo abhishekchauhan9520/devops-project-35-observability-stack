@@ -1,0 +1,27 @@
+groups:
+  - name: observability-recording
+    interval: 30s
+    rules:
+      - record: service:http_requests_rate5m
+        expr: sum by (service_name) (rate(http_server_requests_total[5m]))
+      - record: service:http_errors_rate5m
+        expr: sum by (service_name) (rate(http_server_requests_total{status=~"5.."}[5m]))
+      - record: service:http_error_ratio5m
+        expr: service:http_errors_rate5m / clamp_min(service:http_requests_rate5m, 0.001)
+
+  - name: observability-alerts
+    rules:
+      - alert: ServiceHighErrorRate
+        expr: service:http_error_ratio5m > 0.05
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Service error rate above 5%"
+      - alert: TelemetryPipelineDown
+        expr: up{job="otel-collector"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "OpenTelemetry Collector scrape target is down"

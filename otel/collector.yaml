@@ -13,17 +13,21 @@ receivers:
       - type: json_parser
         parse_from: body
         timestamp:
-          parse_from: body.timestamp
-          layout: '%Y-%m-%dT%H:%M:%S.%fZ'
+          parse_from: attributes.timestamp
+          layout: '%Y-%m-%dT%H:%M:%S.%LZ'
+          layout_type: strptime
         severity:
-          parse_from: body.level
-    attributes:
-      service.name: demo-api
+          parse_from: attributes.level
 
 processors:
   memory_limiter:
     check_interval: 1s
     limit_mib: 256
+  resource/app:
+    attributes:
+      - key: service.name
+        value: demo-api
+        action: upsert
   batch:
     timeout: 5s
 
@@ -47,5 +51,5 @@ service:
       exporters: [otlphttp/tempo]
     logs:
       receivers: [filelog/app, otlp]
-      processors: [memory_limiter, batch]
+      processors: [memory_limiter, resource/app, batch]
       exporters: [otlphttp/loki]

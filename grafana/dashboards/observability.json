@@ -1,0 +1,15 @@
+{
+  "annotations": {"list": []},
+  "editable": false,
+  "panels": [
+    {"type":"timeseries","title":"Request Rate","targets":[{"expr":"sum(service:http_requests_rate5m)","refId":"A"}],"gridPos":{"h":8,"w":12,"x":0,"y":0}},
+    {"type":"timeseries","title":"Error Ratio","targets":[{"expr":"max(service:http_error_ratio5m)","refId":"A"}],"gridPos":{"h":8,"w":12,"x":12,"y":0}},
+    {"type":"timeseries","title":"Service Availability","targets":[{"expr":"up{job=\"otel-collector\"}","refId":"A"}],"gridPos":{"h":8,"w":12,"x":0,"y":8}},
+    {"type":"timeseries","title":"Request Duration","targets":[{"expr":"histogram_quantile(0.95, sum by (le) (rate(http_server_duration_ms_bucket[5m])))","refId":"A"}],"gridPos":{"h":8,"w":12,"x":12,"y":8}}
+  ],
+  "schemaVersion": 41,
+  "tags": ["observability"],
+  "title": "Full Observability Overview",
+  "uid": "full-observability",
+  "version": 1
+}
